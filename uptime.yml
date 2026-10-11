@@ -1,0 +1,98 @@
+name: Uptime and deploy alerts
+
+# Put this file at .github/workflows/uptime.yml in the same repo as index.html.
+# Then add a repository secret named DISCORD_WEBHOOK_URL
+# (Settings -> Secrets and variables -> Actions -> New repository secret).
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "*/15 * * * *"   # uptime check, roughly every 15 minutes
+    - cron: "30 2 * * *"     # daily summary at 08:00 IST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Work out the page address
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          REPO="${GITHUB_REPOSITORY#*/}"
+          if [ "${REPO,,}" = "${OWNER,,}.github.io" ]; then
+            echo "PAGE_URL=https://${OWNER}.github.io/" >> "$GITHUB_ENV"
+          else
+            echo "PAGE_URL=https://${OWNER}.github.io/${REPO}/" >> "$GITHUB_ENV"
+          fi
+
+      - name: Restore last known status
+        uses: actions/cache/restore@v4
+        with:
+          path: state.txt
+          key: uptime-state-none
+          restore-keys: |
+            uptime-state-
+
+      - name: Check the page and send alerts
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          send() {  # title, description, colour
+            if [ -z "${WEBHOOK:-}" ]; then echo "No DISCORD_WEBHOOK_URL secret set, skipping alert"; return 0; fi
+            jq -n --arg t "$1" --arg d "$2" --argjson c "$3" --arg u "$PAGE_URL" \
+              '{username:"Apology page monitor", embeds:[{title:$t, description:$d, color:$c, url:$u, timestamp:(now|todate)}]}' \
+              | curl -s -m 20 -H "Content-Type: application/json" -d @- "$WEBHOOK" > /dev/null || true
+          }
+
+          if [ "$EVENT" = "push" ]; then tries=18; wait=20; sleep 30; else tries=3; wait=15; fi
+
+          status=down; code=none; ms=0
+          for i in $(seq 1 "$tries"); do
+            out=$(curl -s -m 20 -w "\n%{http_code} %{time_total}" "$PAGE_URL" || true)
+            meta=$(echo "$out" | tail -n1)
+            code=$(echo "$meta" | cut -d' ' -f1)
+            secs=$(echo "$meta" | cut -d' ' -f2)
+            if [ "$code" = "200" ] && echo "$out" | grep -q "Apology accepted"; then
+              status=up
+              ms=$(awk -v s="${secs:-0}" 'BEGIN{printf "%d", s*1000}')
+              break
+            fi
+            if [ "$i" -lt "$tries" ]; then sleep "$wait"; fi
+          done
+
+          prev=$(cat state.txt 2>/dev/null || echo unknown)
+          echo "$status" > state.txt
+          echo "status=$status previous=$prev http=$code"
+
+          if [ "$EVENT" = "push" ]; then
+            if [ "$status" = "up" ]; then
+              send "Deployed: the page is live" "$PAGE_URL answered in ${ms} ms." 3066993
+            else
+              send "Deployed, but the page is not reachable yet" "$PAGE_URL did not answer correctly (HTTP $code). Check Settings -> Pages." 15158332
+            fi
+          elif [ "$SCHEDULE" = "30 2 * * *" ]; then
+            if [ "$status" = "up" ]; then
+              send "Daily check: page is up" "$PAGE_URL answered in ${ms} ms." 3066993
+            else
+              send "Daily check: page is DOWN" "$PAGE_URL is not answering (HTTP $code)." 15158332
+            fi
+          elif [ "$status" = "down" ] && [ "$prev" != "down" ]; then
+            send "Page is DOWN" "$PAGE_URL is not answering (HTTP $code)." 15158332
+          elif [ "$status" = "up" ] && [ "$prev" = "down" ]; then
+            send "Page is back up" "$PAGE_URL answered in ${ms} ms." 3066993
+          elif [ "$prev" = "unknown" ]; then
+            send "Monitoring started" "$PAGE_URL is currently ${status}." 15844367
+          fi
+
+      - name: Save status
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: state.txt
+          key: uptime-state-${{ github.run_id }}-${{ github.run_attempt }}

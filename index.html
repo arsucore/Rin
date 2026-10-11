@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#060208">
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="I made something just for you.">
+<meta property="og:title" content="For Rahini">
+<meta property="og:description" content="I made something just for you.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23e60d24' d='M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z'/%3E%3C/svg%3E">
+<style>html{color-scheme:dark}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Love Heart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Cormorant+Garamond:ital,wght@1,500&display=swap">
+<style>
+  /* Layout: one phone-ratio column (max 480px) over a full-screen animated background. Stages swap in place: intro, heart, letters fall, handwritten letter, question, thank-you. */
+  :root {
+    --bg: #060208;
+    --bg-glow: #1d0612;
+    --fg: #f3d9db;
+    --muted: #b0828b;
+    --accent: #e60d24;
+    --rose: #ff9aa6;
+    --paper: #f5ebe6;
+    --ink: #2a1730;
+    --rule: #e6d2d2;
+    --margin: #dc8a93;
+    --display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; height: 100dvh; overscroll-behavior: none; }
+  body {
+    background-color: var(--bg);
+    background-image: radial-gradient(120% 80% at 50% 28%, var(--bg-glow) 0%, var(--bg) 62%);
+    color: var(--fg);
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+  }
+  #bg { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+  #app { position: relative; z-index: 1; width: 100%; max-width: 480px; height: 100%; min-width: 0; }
+  .sec { display: none; position: absolute; inset: 0; min-width: 0; }
+  [data-stage="intro"] #intro { display: flex; }
+  [data-stage="heart"] #heartSec, [data-stage="fall"] #heartSec { display: block; }
+  [data-stage="letter"] #letter, [data-stage="ask"] #letter { display: flex; }
+  [data-stage="ask"] #ask { display: flex; }
+  [data-stage="done"] #done { display: flex; }
+
+  /* intro */
+  #intro { flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 0 24px; }
+  .to { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 2.7rem; line-height: 1.1; text-wrap: balance; text-shadow: 0 0 28px rgba(230, 13, 36, 0.45); }
+  .note { font-family: var(--display); font-style: italic; font-size: 1.2rem; color: var(--muted); }
+  .from { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); left: 0; right: 0; font-family: var(--display); font-style: italic; font-size: 1.05rem; color: var(--muted); opacity: 0.8; }
+  .btn {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.35rem;
+    color: var(--fg);
+    background: rgba(230, 13, 36, 0.08);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    min-height: 52px;
+    min-width: 140px;
+    padding: 10px 34px;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:hover { background: var(--accent); color: #fff; }
+  .btn:focus-visible, #mute:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+  #open { margin-top: 8px; animation: beat 2.4s ease-in-out infinite; }
+  @keyframes beat { 0%, 100% { box-shadow: 0 0 0 0 rgba(230, 13, 36, 0.45); } 50% { box-shadow: 0 0 0 14px rgba(230, 13, 36, 0); } }
+
+  /* heart */
+  #heartSec canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+  #tapBtn { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 108px); transform: translateX(-50%); visibility: hidden; opacity: 0; transition: opacity 0.9s ease; animation: beat 2.4s ease-in-out infinite; white-space: nowrap; }
+  [data-stage="heart"][data-ready="1"] #tapBtn { visibility: visible; opacity: 1; }
+  #guide { position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); padding: 0 28px; text-align: center; font-family: var(--display); font-style: italic; font-size: 1.15rem; line-height: 1.35; color: var(--muted); pointer-events: none; z-index: 2; text-wrap: balance; }
+  #guide.swap { animation: fadein 0.7s ease both; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* letter */
+  #letter { inset: 60px 12px 78px 12px; flex-direction: column; transition: opacity 0.9s ease, filter 0.9s ease; }
+  [data-stage="ask"] #letter { opacity: 0.2; filter: blur(2px); }
+  .scroll { flex: 1; min-height: 0; overflow-y: hidden; overflow-x: hidden; touch-action: none; }
+  .paper {
+    min-height: 100%;
+    background-color: var(--paper);
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(2.2rem - 1px), var(--rule) calc(2.2rem - 1px), var(--rule) 2.2rem);
+    color: var(--ink);
+    font-family: var(--hand);
+    font-weight: 500;
+    font-size: 1.65rem;
+    line-height: 2.2rem;
+    padding: 2.2rem 36px 60vh 44px;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: rise 0.9s ease-out both;
+  }
+  .paper::before { content: ""; position: absolute; left: 30px; top: 0; bottom: 0; width: 1px; background: var(--margin); }
+  .paper p { margin: 0 0 2.2rem; overflow-wrap: anywhere; text-wrap: pretty; opacity: 0; transform: translateY(8px); transition: opacity 1.1s ease, transform 1.1s ease; }
+  .paper p.show { opacity: 1; transform: none; }
+  .paper .sign { font-weight: 600; font-size: 1.9rem; }
+  @keyframes rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+
+  /* question */
+  #ask { align-items: center; justify-content: center; padding: 0 20px; }
+  .askcard { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 26px; animation: rise 0.9s ease-out backwards; }
+  .q { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 2.5rem; line-height: 1.1; text-shadow: 0 0 28px rgba(230, 13, 36, 0.45); text-wrap: balance; }
+  .row { display: flex; gap: 20px; align-items: center; justify-content: center; min-height: 56px; }
+  .yes { background: var(--accent); color: #fff; transition: transform 0.25s ease; }
+  .no { transition: left 0.28s ease, top 0.28s ease, transform 0.25s ease; }
+  .no.free { position: absolute; z-index: 3; }
+  .no.shake { animation: nope 0.32s linear; }
+  @keyframes nope {
+    0%, 100% { translate: 0 0; rotate: 0deg; }
+    15% { translate: -6px 0; rotate: -7deg; }
+    30% { translate: 6px 0; rotate: 7deg; }
+    45% { translate: -6px 0; rotate: -6deg; }
+    60% { translate: 6px 0; rotate: 6deg; }
+    75% { translate: -3px 0; rotate: -3deg; }
+  }
+
+  /* done */
+  #done { flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 0 28px; }
+  .thanks { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 2.6rem; line-height: 1.1; text-shadow: 0 0 28px rgba(230, 13, 36, 0.5); animation: rise 1.1s ease-out both; }
+  .promise { font-family: var(--display); font-style: italic; font-size: 1.3rem; color: var(--muted); animation: rise 1.1s ease-out 0.5s both; }
+  .signoff { font-family: var(--hand); font-weight: 600; font-size: 2rem; color: var(--rose); animation: rise 1.1s ease-out 1s both; }
+
+  #mute {
+    position: absolute;
+    top: 10px; right: 12px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid #5a2a35;
+    background: rgba(6, 2, 8, 0.6);
+    color: var(--fg);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 6;
+  }
+  [data-stage]:not([data-stage="intro"]) #mute { display: flex; }
+  #mute svg { width: 20px; height: 20px; }
+  #mute .off { display: none; }
+  #mute[aria-pressed="true"] .on { display: none; }
+  #mute[aria-pressed="true"] .off { display: block; }
+
+  /* letter controls: pause button and a draggable side bar */
+  #pauseBtn {
+    position: absolute;
+    top: 10px; left: 12px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid #5a2a35;
+    background: rgba(6, 2, 8, 0.6);
+    color: var(--fg);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 6;
+    -webkit-tap-highlight-color: transparent;
+  }
+  [data-stage="letter"] #pauseBtn { display: flex; }
+  #pauseBtn svg { width: 20px; height: 20px; }
+  #pauseBtn .play { display: none; }
+  #pauseBtn[aria-pressed="true"] .pause { display: none; }
+  #pauseBtn[aria-pressed="true"] .play { display: block; }
+  #pauseBtn:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+  .rail { position: absolute; top: 8px; bottom: 8px; right: 2px; width: 32px; z-index: 4; touch-action: none; cursor: pointer; }
+  .rail::before { content: ""; position: absolute; top: 0; bottom: 0; left: 14px; width: 4px; border-radius: 2px; background: rgba(42, 23, 48, 0.2); }
+  .thumb { position: absolute; left: 10px; top: 0; width: 12px; height: 52px; border-radius: 6px; background: var(--accent); box-shadow: 0 0 10px rgba(230, 13, 36, 0.55); }
+  [data-stage="ask"] .rail { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .paper, .askcard, .thanks, .promise, .signoff { animation: none; }
+    #open, #tapBtn, #guide.swap, .no.shake { animation: none; }
+    .paper p { transition: none; }
+  }
+</style>
+
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<main id="app" data-stage="intro">
+  <button id="mute" type="button" aria-label="Sound on" aria-pressed="false">
+    <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+    <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+  </button>
+
+  <button id="pauseBtn" type="button" aria-label="Pause" aria-pressed="false">
+    <svg class="pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+    <svg class="play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+  </button>
+
+  <section class="sec" id="intro">
+    <div class="to">For Rahini</div>
+    <div class="note">I made something just for you.</div>
+    <button class="btn" id="open" type="button">Open</button>
+    <div class="from">from Adarsh</div>
+  </section>
+
+  <section class="sec" id="heartSec">
+    <canvas id="c" aria-label="A heart made of the words I'm sorry in twenty languages"></canvas>
+    <button class="btn" id="tapBtn" type="button">Tap here</button>
+  </section>
+
+  <section class="sec" id="letter">
+    <div class="scroll" id="scroll">
+      <article class="paper">
+        <p>Hi Rahini,</p>
+        <p>I’m sorry for those words.</p>
+        <p>They were not mine. They never came from my heart, and they are nothing like the way I see you. I wish I could pull every single one of them back.</p>
+        <p>Relax, my princess. I won’t let your hands scroll this letter. Just sit back and let me talk to you for a minute.</p>
+        <p>This heart is only a quarter of my apology. It took me two hours to build, and I would happily spend two more, because you deserve so much more than this.</p>
+        <p>You walk into my thoughts without knocking and rearrange everything. Honestly, that’s a little unfair, because now I can’t think straight when you’re upset with me.</p>
+        <p>So here is my promise: gentler words, more patience, and a lot more of the version of me that makes you smile. (You have to admit I’m not bad at that.)</p>
+        <p>I miss your voice already, my Rin. Please forgive me, and let me make it up to you properly.</p>
+        <p>Tomorrow will be more surprises, my Rin.</p>
+        <p class="sign">Yours, hopefully,<br>Adarsh</p>
+      </article>
+    </div>
+    <div class="rail" id="rail" aria-label="Letter progress. Drag to re-read."><div class="thumb" id="thumb"></div></div>
+  </section>
+
+  <section class="sec" id="ask">
+    <div class="askcard" id="askcard">
+      <div class="q">Apology accepted?</div>
+      <div class="row" id="row">
+        <button class="btn yes" id="yes" type="button">Yes</button>
+        <button class="btn no" id="no" type="button">No</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="done">
+    <div class="thanks">Thank you, my Rin.</div>
+    <div class="promise">I promise to do better, starting now.</div>
+    <div class="signoff">Adarsh</div>
+  </section>
+<div id="guide" aria-live="polite"></div>
+</main>
+
+<script>
+(function () {
+  /* ================= settings ================= */
+  // Paste your Discord webhook URL between the quotes. Leave as is to switch alerts off.
+  // Add ?preview to the page address to test without sending alerts.
+  var WEBHOOK_URL = "https://discord.com/api/webhooks/1558860686489288826/I1cL3EWvJgBxBpp6pTS_5nYi6ahiSJhuAT-UEK4p3OY0AhwpovKAXzhB5YcA0ZRk20BE";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var app = $("app"), canvas = $("c"), ctx = canvas.getContext("2d"), heartSec = $("heartSec");
+  var REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var PHRASES = [
+    "I'm sorry", "Özür dilerim", "Lo siento", "Je suis désolé",
+    "Es tut mir leid", "Mi dispiace", "Desculpa", "Прости",
+    "미안해", "ごめんなさい", "对不起", "मुझे माफ़ कर दो",
+    "Συγγνώμη", "Het spijt me", "Förlåt", "Przepraszam",
+    "ขอโทษ", "Anh xin lỗi", "Maaf", "Вибач"
+  ];
+  var FONT = '"Segoe UI", "Noto Sans", Arial, "Noto Sans Devanagari", "Noto Sans Thai", "Noto Sans KR", "Noto Sans JP", "Noto Sans SC", sans-serif';
+  var BGC = [6 / 255, 2 / 255, 8 / 255];
+  var FLASH = [1.0, 0.78, 0.78];
+  var DURATION = 8000, ANIM_MS = 42 * 16;
+
+  /* ================= stages ================= */
+  var stage = "intro", stageStart = performance.now(), pageStart = performance.now();
+  var LABELS = {
+    intro: "Welcome screen (Open button)",
+    heart: "Heart of sorries",
+    fall: "Words falling",
+    letter: "Reading the letter",
+    ask: "Question: apology accepted?",
+    done: "Finished"
+  };
+  var letterIdx = 0, askShownAt = 0, noCount = 0, heartFinished = false;
+
+  var GUIDES = {
+    intro: "Tap Open to begin.",
+    heart: "Be patient, my Rin. Tap only after the \u201cTap here\u201d button arrives.",
+    fall: "Just watch. It\u2019s coming.",
+    letter: "Relax and read. Pause or drag the side bar to take your time.",
+    ask: "Choose your answer.",
+    done: "Tomorrow will be more surprises."
+  };
+  var guideEl = $("guide");
+  function updateGuide() {
+    var t = (stage === "heart" && heartFinished) ? "Now tap the button, my Rin." : (stage === "letter" && paused) ? "Paused. Press play when you\u2019re ready, my Rin." : GUIDES[stage];
+    guideEl.textContent = t;
+    guideEl.classList.remove("swap");
+    void guideEl.offsetWidth;
+    guideEl.classList.add("swap");
+  }
+  function setStage(s) {
+    stage = s;
+    stageStart = performance.now();
+    app.setAttribute("data-stage", s);
+    updateGuide();
+  }
+
+  /* ================= alerts (Discord webhook) ================= */
+  var hookReady = /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(WEBHOOK_URL) && !/[?&]preview\b/.test(location.search);
+
+  function deviceInfo() {
+    var ua = navigator.userAgent, os = "Unknown OS", br = "Browser", model = "";
+    var m;
+    if ((m = ua.match(/Android ([\d.]+)/))) os = "Android " + m[1];
+    else if (/iPhone|iPad/.test(ua)) { m = ua.match(/OS (\d+)/); os = "iOS " + (m ? m[1] : ""); }
+    else if (/Windows/.test(ua)) os = "Windows";
+    else if (/Mac OS X/.test(ua)) os = "macOS";
+    else if (/Linux/.test(ua)) os = "Linux";
+    if (/Instagram/.test(ua)) br = "Instagram in-app";
+    else if (/FBAN|FBAV/.test(ua)) br = "Facebook in-app";
+    else if (/SamsungBrowser/.test(ua)) br = "Samsung Internet";
+    else if (/EdgA?\//.test(ua)) br = "Edge";
+    else if (/Firefox|FxiOS/.test(ua)) br = "Firefox";
+    else if (/CriOS|Chrome/.test(ua)) br = "Chrome";
+    else if (/Safari/.test(ua)) br = "Safari";
+    if ((m = ua.match(/;\s*([^;)]+?)\s+Build/))) model = m[1];
+    return os + " · " + br + (model ? " · " + model : "") + " · " + screen.width + "×" + screen.height + " · " + (navigator.language || "");
+  }
+  var DEVICE = deviceInfo();
+
+  function fmt(s) {
+    if (s < 60) return s.toFixed(1) + " s";
+    return Math.floor(s / 60) + " min " + Math.round(s % 60) + " s";
+  }
+  function istNow() {
+    try {
+      return new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true }) + " IST";
+    } catch (err) { return new Date().toISOString(); }
+  }
+
+  function notify(title, color, extra) {
+    if (!hookReady) return;
+    var now = performance.now();
+    var page = LABELS[stage] + (stage === "letter" ? " (paragraph " + letterIdx + " of " + paras.length + (paused ? ", paused" : "") + ")" : "");
+    var fields = (extra || []).concat([
+      { name: "Page", value: page, inline: true },
+      { name: "On this page for", value: fmt((now - stageStart) / 1000), inline: true },
+      { name: "Total time", value: fmt((now - pageStart) / 1000), inline: true },
+      { name: "Time", value: istNow(), inline: true },
+      { name: "Device", value: DEVICE, inline: false }
+    ]);
+    try {
+      fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({ username: "Apology page", embeds: [{ title: title, color: color, fields: fields, timestamp: new Date().toISOString() }] })
+      }).catch(function () {});
+    } catch (err) {}
+  }
+  var PINK = 15277667, GREEN = 3066993, RED = 15158332, GOLD = 15844367;
+
+  /* live status: one Discord message that keeps updating while the page is open */
+  var liveId = null, lastActive = performance.now(), idleSent = false;
+  ["pointerdown", "touchstart", "keydown", "scroll"].forEach(function (t) {
+    window.addEventListener(t, function () { lastActive = performance.now(); idleSent = false; }, { passive: true, capture: true });
+  });
+  function statusText() {
+    if (document.hidden) return "🟡 Away (switched app or locked)";
+    var idle = (performance.now() - lastActive) / 1000;
+    if ((stage === "intro" || stage === "heart" || stage === "ask") && idle > 25) return "🟡 Idle for " + fmt(idle);
+    return "🟢 Active now";
+  }
+  function livePayload(final) {
+    var now = performance.now();
+    var page = LABELS[stage] + (stage === "letter" ? " (paragraph " + letterIdx + " of " + paras.length + (paused ? ", paused" : "") + ")" : "");
+    return JSON.stringify({ username: "Apology page", embeds: [{
+      title: "Live status",
+      color: final ? 9807270 : PINK,
+      description: final ? "⚪ Left the page" : statusText(),
+      fields: [
+        { name: "Page", value: page, inline: false },
+        { name: "On this page for", value: fmt((now - stageStart) / 1000), inline: true },
+        { name: "Total time", value: fmt((now - pageStart) / 1000), inline: true },
+        { name: "Last touch", value: fmt((now - lastActive) / 1000) + " ago", inline: true },
+        { name: "No attempts", value: String(noCount), inline: true },
+        { name: "Updated", value: istNow(), inline: true }
+      ],
+      timestamp: new Date().toISOString()
+    }] });
+  }
+  function liveStart() {
+    if (!hookReady) return;
+    try {
+      fetch(WEBHOOK_URL + "?wait=true", { method: "POST", headers: { "Content-Type": "application/json" }, body: livePayload(false) })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { if (j && j.id) liveId = j.id; })
+        .catch(function () {});
+    } catch (err) {}
+  }
+  function liveUpdate(final) {
+    if (!hookReady || !liveId) return;
+    try {
+      fetch(WEBHOOK_URL + "/messages/" + liveId, { method: "PATCH", headers: { "Content-Type": "application/json" }, keepalive: true, body: livePayload(final) }).catch(function () {});
+    } catch (err) {}
+  }
+  setInterval(function () {
+    if (!document.hidden) liveUpdate(false);
+    var idle = performance.now() - lastActive;
+    if (!document.hidden && !idleSent && idle > 60000 && (stage === "intro" || stage === "heart" || stage === "ask")) {
+      idleSent = true;
+      notify("Rin seems idle", GOLD, [{ name: "No touch for", value: fmt(idle / 1000), inline: true }]);
+    }
+  }, 8000);
+  window.addEventListener("pagehide", function () { liveUpdate(true); });
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) { hiddenAt = performance.now(); notify("Left the page (switched app or locked the phone)", GOLD); liveUpdate(false); }
+    else if (hiddenAt) { notify("Came back to the page", PINK, [{ name: "Was away for", value: fmt((performance.now() - hiddenAt) / 1000), inline: true }]); hiddenAt = 0; }
+  });
+  var hiddenAt = 0;
+
+  /* ================= sound (soft music box, no noise) ================= */
+  var AC = null, master = null, bus = null, comp = null, sfxOut = null, noiseBuf = null, muted = false, baseVol = 0.55;
+  var BAR = 7.2, nextBar = 0, barIdx = 0;
+  var CHORDS = [
+    { pad: [130.81, 196.0], arp: [261.63, 329.63, 392.0, 493.88] },
+    { pad: [110.0, 164.81], arp: [220.0, 261.63, 329.63, 392.0] },
+    { pad: [87.31, 130.81], arp: [174.61, 220.0, 261.63, 329.63] },
+    { pad: [98.0, 146.83], arp: [196.0, 246.94, 293.66, 329.63] }
+  ];
+  var PATTERN = [0, 1, 2, 3, 2, 1, 2, 1];
+
+  function pluck(f, t, vol) {
+    [[1, vol, 2.6], [2, vol * 0.28, 1.1], [3, vol * 0.08, 0.5]].forEach(function (h) {
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = "sine"; o.frequency.value = f * h[0];
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(h[1], t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + h[2]);
+      o.connect(g); g.connect(bus);
+      o.start(t); o.stop(t + h[2] + 0.05);
+    });
+  }
+  function padNote(f, t, len) {
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = "sine"; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.04, t + 2.2);
+    g.gain.linearRampToValueAtTime(0.0001, t + len + 1.5);
+    o.connect(g); g.connect(bus);
+    o.start(t); o.stop(t + len + 1.6);
+  }
+  function playBar(t) {
+    var ch = CHORDS[barIdx % CHORDS.length]; barIdx++;
+    ch.pad.forEach(function (f) { padNote(f, t, BAR); });
+    PATTERN.forEach(function (idx, i) { pluck(ch.arp[idx], t + i * (BAR / 8), 0.09); });
+  }
+  function schedule() {
+    if (!AC) return;
+    while (nextBar < AC.currentTime + 3) { playBar(nextBar); nextBar += BAR; }
+  }
+  function bell(f, when, vol) { if (AC) pluck(f, AC.currentTime + (when || 0.05), vol || 0.09); }
+  function chimeUp() { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach(function (f, i) { bell(f, 0.05 + i * 0.16, 0.1); }); }
+
+  function tone(f, at, dur, vol, type, endF) {
+    if (!AC || !sfxOut) return;
+    var t = AC.currentTime + at, o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || "sine";
+    o.frequency.setValueAtTime(f, t);
+    if (endF) o.frequency.exponentialRampToValueAtTime(endF, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(sfxOut);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  function sfxShake() { [360, 270, 360, 270, 330].forEach(function (f, i) { tone(f, i * 0.06, 0.07, 0.09, "triangle"); }); }
+  function sfxRun() {
+    if (!AC || !sfxOut) return;
+    if (!noiseBuf) {
+      noiseBuf = AC.createBuffer(1, Math.floor(AC.sampleRate * 0.3), AC.sampleRate);
+      var d = noiseBuf.getChannelData(0);
+      for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    var t = AC.currentTime, src = AC.createBufferSource(), bp = AC.createBiquadFilter(), g = AC.createGain();
+    src.buffer = noiseBuf; bp.type = "bandpass"; bp.Q.value = 2.5;
+    bp.frequency.setValueAtTime(500, t); bp.frequency.exponentialRampToValueAtTime(3200, t + 0.25);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.16, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    src.connect(bp); bp.connect(g); g.connect(sfxOut);
+    src.start(t); src.stop(t + 0.3);
+    tone(520, 0, 0.18, 0.06, "sine", 900);
+  }
+  function setVolume(v, tc) {
+    baseVol = v;
+    if (AC && master) master.gain.setTargetAtTime(muted ? 0 : v, AC.currentTime, tc || 0.4);
+  }
+  function startAudio() {
+    if (AC) return;
+    try {
+      var Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return;
+      AC = new Ctor();
+      comp = AC.createDynamicsCompressor();
+      comp.threshold.value = -22; comp.knee.value = 24; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+      master = AC.createGain(); master.gain.value = 0;
+      bus = AC.createGain();
+      var dl = AC.createDelay(1.0); dl.delayTime.value = 0.36;
+      var fb = AC.createGain(); fb.gain.value = 0.32;
+      var lp = AC.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1800;
+      var wet = AC.createGain(); wet.gain.value = 0.45;
+      bus.connect(master);
+      bus.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl);
+      lp.connect(wet); wet.connect(master);
+      master.connect(comp); comp.connect(AC.destination);
+      sfxOut = AC.createGain(); sfxOut.connect(AC.destination);
+      if (AC.state === "suspended") AC.resume();
+      nextBar = AC.currentTime + 0.15;
+      schedule();
+      setInterval(schedule, 1000);
+      setVolume(baseVol, 3);
+    } catch (err) { AC = null; }
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!AC) return;
+    try { if (document.hidden) AC.suspend(); else if (!muted) AC.resume(); } catch (err) {}
+  });
+
+  var muteBtn = $("mute");
+  muteBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    muted = !muted;
+    muteBtn.setAttribute("aria-pressed", String(muted));
+    muteBtn.setAttribute("aria-label", muted ? "Sound off" : "Sound on");
+    setVolume(baseVol, 0.2);
+    if (sfxOut) sfxOut.gain.setTargetAtTime(muted ? 0 : 1, AC.currentTime, 0.1);
+    if (AC && !muted && AC.state === "suspended") AC.resume();
+  });
+
+  /* ================= helpers ================= */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function clamp(v) { return Math.max(0, Math.min(1, v)); }
+  function mix(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; }
+  function dim(c, k) { return [c[0] * k, c[1] * k, c[2] * k]; }
+  function hx(c) { return "rgb(" + Math.round(clamp(c[0]) * 255) + "," + Math.round(clamp(c[1]) * 255) + "," + Math.round(clamp(c[2]) * 255) + ")"; }
+
+  /* ================= heart of words ================= */
+  var S = { items: [], cw: 0, ch: 0, cy: 0, Wl: 300, dpr: 1, LIFT: 30, start: 0, nextShimmer: 0, shimmers: [], freeze: 0, fallStart: 0 };
+
+  function layout(W) {
+    var rnd = mulberry32(11);
+    function uniform(a, b) { return a + (b - a) * rnd(); }
+    function choice(arr) { return arr[Math.floor(rnd() * arr.length)]; }
+    var SC = W * 0.9 / 32, k = 0.8 + 0.2 * Math.min(1, W / 800), OY = SC * 2.5;
+    var SIZES = [10, 11, 12, 13].map(function (s) { return s * k; });
+    var GAP = 7 * k, LIFT = 34 * k;
+
+    function heart(a) {
+      var x = 16 * Math.pow(Math.sin(a), 3);
+      var y = 13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a);
+      return [x * SC, y * SC + OY];
+    }
+    var POLY = [];
+    for (var i = 0; i < 720; i++) POLY.push(heart(2 * Math.PI * i / 720));
+    var EDGES = POLY.map(function (p, i) { return [p, POLY[(i + 1) % POLY.length]]; });
+    var YMAX = -Infinity, YMIN = Infinity;
+    POLY.forEach(function (p) { YMAX = Math.max(YMAX, p[1]); YMIN = Math.min(YMIN, p[1]); });
+    var CY = (YMAX + YMIN) / 2;
+
+    function spans(y) {
+      var xs = [];
+      EDGES.forEach(function (e) {
+        var x1 = e[0][0], y1 = e[0][1], x2 = e[1][0], y2 = e[1][1];
+        if ((y1 <= y && y < y2) || (y2 <= y && y < y1)) xs.push(x1 + (y - y1) * (x2 - x1) / (y2 - y1));
+      });
+      xs.sort(function (a, b) { return a - b; });
+      var out = [];
+      for (var j = 0; j + 1 < xs.length; j += 2) out.push([xs[j], xs[j + 1]]);
+      return out;
+    }
+    function intersect(A, B) {
+      var out = [];
+      A.forEach(function (a) { B.forEach(function (b) {
+        var lo = Math.max(a[0], b[0]), hi = Math.min(a[1], b[1]);
+        if (hi - lo > 14 * k) out.push([lo, hi]);
+      }); });
+      return out;
+    }
+    var order = [], cursor = 0;
+    function nextPhrase() {
+      if (cursor >= order.length) {
+        order = PHRASES.slice();
+        for (var i = order.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = order[i]; order[i] = order[j]; order[j] = t; }
+        cursor = 0;
+      }
+      return order[cursor++];
+    }
+    var mctx = document.createElement("canvas").getContext("2d");
+    function measure(text, size) { mctx.font = "bold " + size + "px " + FONT; return mctx.measureText(text).width; }
+
+    var rowH = Math.max.apply(null, SIZES) * 1.25 + 4 * k, half = rowH / 2, placed = [];
+    var y = YMAX - half;
+    while (y > YMIN + half) {
+      var row = intersect(spans(y + half), spans(y - half));
+      row.forEach(function (seg) {
+        var lo = seg[0] + 4 * k, hi = seg[1] - 4 * k, cur = lo + uniform(0, 8 * k), line = [];
+        while (true) {
+          var fit = null;
+          for (var n = 0; n < 10; n++) {
+            var text = nextPhrase(), size = choice(SIZES), w = measure(text, size);
+            if (cur + w <= hi) { fit = [text, size, w]; break; }
+          }
+          if (!fit) break;
+          line.push([cur + fit[2] / 2, fit[0], fit[1], fit[2]]);
+          cur += fit[2] + GAP;
+        }
+        if (!line.length) return;
+        if (line.length > 1) {
+          var left = hi - (line[line.length - 1][0] + line[line.length - 1][3] / 2);
+          line.forEach(function (it, i) { it[0] += left * i / (line.length - 1); });
+        } else { line[0][0] = (lo + hi) / 2; }
+        line.forEach(function (it, i) { placed.push({ x: it[0], y: y, text: it[1], size: it[2], edge: i === 0 || i === line.length - 1 }); });
+      });
+      y -= rowH;
+    }
+    var wine = [0.58, 0.0, 0.09], crimson = [0.90, 0.05, 0.14], blood = [0.98, 0.10, 0.16];
+    placed.forEach(function (p) {
+      var rad = Math.min(1, Math.hypot(p.x / (16 * SC), (p.y - CY) / (14.5 * SC)));
+      var base = mix(wine, crimson, 0.25 + 0.75 * rad);
+      base = mix(base, blood, rnd() * 0.35 + (p.edge ? 0.3 : 0));
+      p.color = base.map(function (v) { return Math.min(1, v); });
+      p.rad = rad;
+    });
+    var edges = placed.filter(function (p) { return p.edge; }), inner = placed.filter(function (p) { return !p.edge; }), TWO_PI = 2 * Math.PI;
+    edges.sort(function (a, b) {
+      var A = ((Math.atan2(a.x, a.y - CY) % TWO_PI) + TWO_PI) % TWO_PI, B = ((Math.atan2(b.x, b.y - CY) % TWO_PI) + TWO_PI) % TWO_PI;
+      return A - B;
+    });
+    inner.forEach(function (p) { p.sortKey = -p.rad + rnd() * 0.08; });
+    inner.sort(function (a, b) { return a.sortKey - b.sortKey; });
+    var ordered = edges.concat(inner);
+    ordered.forEach(function (p, i) { p.t0 = (i / ordered.length) * DURATION; p.dx = uniform(-10, 10) * k; });
+    return { items: ordered, LIFT: LIFT };
+  }
+
+  function resize() {
+    var cw = Math.floor(heartSec.clientWidth), ch = Math.floor(heartSec.clientHeight);
+    if (cw < 50 || ch < 50) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    S.cw = cw; S.ch = ch; S.dpr = dpr; S.cy = ch * 0.46;
+    S.Wl = Math.max(280, Math.min(520, cw - 24));
+    canvas.width = Math.round(cw * dpr);
+    canvas.height = Math.round(ch * dpr);
+    var L = layout(S.Wl);
+    S.items = L.items; S.LIFT = L.LIFT;
+  }
+
+  function drawText(text, size, x, y, color) { ctx.font = "bold " + size + "px " + FONT; ctx.fillStyle = color; ctx.fillText(text, x, y); }
+
+  function drawItem(p, el, ft) {
+    var u = clamp((el - p.t0) / ANIM_MS), e = 1 - Math.pow(1 - u, 3), c = p.color;
+    var x = p.x + S.cw / 2, y = S.cy - p.y;
+    var px = x + p.dx * (1 - e), py = y - (1 - e) * S.LIFT;
+    var ox = 0, oy = 0, rot = 0;
+    if (u >= 1) { px = x; py = y; }
+    if (ft > 0) {
+      var tt = Math.max(0, ft - p.fd);
+      oy = 0.5 * S.g * tt * tt; ox = p.fvx * tt; rot = p.fr * tt;
+    }
+    ctx.save();
+    ctx.translate(px + ox, py + oy);
+    if (rot) ctx.rotate(rot);
+    if (u < 1) {
+      drawText(p.text, p.size, 2, 3, hx(mix(BGC, dim(c, 0.30), e)));
+      drawText(p.text, p.size + 1, 0, 0, hx(mix(BGC, dim(c, 0.20), e * e)));
+      var flash = 0.75 * Math.sin(Math.PI * clamp((u - 0.55) / 0.45));
+      drawText(p.text, p.size, 0, 0, hx(mix(mix(BGC, c, Math.pow(e, 1.5)), FLASH, flash)));
+    } else {
+      drawText(p.text, p.size, 2, 3, hx(dim(c, 0.30)));
+      drawText(p.text, p.size + 1, 0, 0, hx(dim(c, 0.20)));
+      drawText(p.text, p.size, 0, 0, hx(p.shim ? mix(c, FLASH, 0.6) : c));
+    }
+    ctx.restore();
+  }
+
+  function heartFrame(now) {
+    if (stage !== "heart" && stage !== "fall") return;
+    ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+    ctx.clearRect(0, 0, S.cw, S.ch);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    var items = S.items, i, p;
+
+    if (stage === "heart") {
+      var el = REDUCED ? Infinity : now - S.start;
+      var done = el > DURATION + ANIM_MS;
+      if (done && !heartFinished) { heartFinished = true; app.setAttribute("data-ready", "1"); updateGuide(); notify("Heart finished, \u201cTap here\u201d button is showing", PINK); }
+      if (done && !REDUCED && now >= S.nextShimmer) {
+        S.nextShimmer = now + 140;
+        var it = items[Math.floor(Math.random() * items.length)];
+        it.shim = true;
+        setTimeout(function () { it.shim = false; }, 260);
+      }
+      for (i = 0; i < items.length; i++) { p = items[i]; if (el >= p.t0) drawItem(p, el, 0); }
+    } else {
+      var ft = (now - S.fallStart) / 1000;
+      for (i = 0; i < items.length; i++) { p = items[i]; if (S.freeze >= p.t0) drawItem(p, S.freeze, ft); }
+      if (ft > 2.1) { startLetter(); return; }
+    }
+    requestAnimationFrame(heartFrame);
+  }
+
+  function tapHeart() {
+    if (stage !== "heart" || !heartFinished) return;
+    notify("Tapped \u201cTap here\u201d, letter is starting", PINK);
+    S.freeze = REDUCED ? Infinity : performance.now() - S.start;
+    if (!isFinite(S.freeze)) S.freeze = DURATION + ANIM_MS;
+    S.g = S.ch * 2.6;
+    var rnd = Math.random;
+    S.items.forEach(function (p) {
+      var yn = (S.cy - p.y) / S.ch;
+      p.fd = (1 - yn) * 0.55 + rnd() * 0.15;
+      p.fvx = (rnd() - 0.5) * 50;
+      p.fr = (rnd() - 0.5) * 3;
+    });
+    S.fallStart = performance.now();
+    setStage("fall");
+    setVolume(0.55, 1.2);
+    bell(392, 0.05, 0.05); bell(523.25, 0.2, 0.05);
+    requestAnimationFrame(heartFrame);
+  }
+
+  /* ================= letter ================= */
+  var scrollEl = $("scroll");
+  var paras = Array.prototype.slice.call(document.querySelectorAll(".paper p"));
+
+  var nextIdx = 0, revealed = 0, paused = false, timer = null, dragging = false;
+  var railEl = $("rail"), thumbEl = $("thumb"), pauseBtn = $("pauseBtn");
+
+  function fullScroll() {
+    var lp = paras[paras.length - 1];
+    return Math.max(1, lp.offsetTop + lp.offsetHeight - scrollEl.clientHeight * 0.7);
+  }
+  function maxScroll() {
+    if (!revealed) return 0;
+    var p = paras[revealed - 1];
+    return Math.max(0, p.offsetTop + p.offsetHeight - scrollEl.clientHeight * 0.7);
+  }
+  function updateThumb() {
+    var th = thumbEl.offsetHeight, tr = railEl.clientHeight;
+    if (!tr) return;
+    var r = Math.min(1, scrollEl.scrollTop / fullScroll());
+    thumbEl.style.top = (r * Math.max(0, tr - th)) + "px";
+  }
+  scrollEl.addEventListener("scroll", function () {
+    if (paused) { var mx = maxScroll(); if (scrollEl.scrollTop > mx + 2) scrollEl.scrollTop = mx; }
+    updateThumb();
+  });
+
+  function setPause(v, quiet) {
+    paused = v;
+    pauseBtn.setAttribute("aria-pressed", String(v));
+    pauseBtn.setAttribute("aria-label", v ? "Play" : "Pause");
+    scrollEl.style.overflowY = v ? "auto" : "hidden";
+    scrollEl.style.touchAction = v ? "pan-y" : "none";
+    if (v) { clearTimeout(timer); timer = null; }
+    else if (!quiet && stage === "letter") { clearTimeout(timer); timer = setTimeout(step, 500); }
+    updateGuide();
+  }
+  pauseBtn.addEventListener("click", function (e) { e.stopPropagation(); if (stage === "letter") setPause(!paused); });
+
+  function scrub(e) {
+    var rect = railEl.getBoundingClientRect(), th = thumbEl.offsetHeight;
+    var r = clamp((e.clientY - rect.top - th / 2) / Math.max(1, rect.height - th));
+    scrollEl.scrollTop = Math.min(maxScroll(), r * fullScroll());
+  }
+  railEl.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    dragging = true;
+    try { railEl.setPointerCapture(e.pointerId); } catch (err) {}
+    if (!paused) setPause(true);
+    scrub(e);
+  });
+  railEl.addEventListener("pointermove", function (e) { if (dragging) scrub(e); });
+  ["pointerup", "pointercancel"].forEach(function (t) { railEl.addEventListener(t, function () { dragging = false; }); });
+
+  function step() {
+    timer = null;
+    if (stage !== "letter" || paused) return;
+    if (nextIdx >= paras.length) { timer = setTimeout(showAsk, 1500); return; }
+    var p = paras[nextIdx];
+    p.classList.add("show");
+    nextIdx++; revealed = nextIdx; letterIdx = nextIdx;
+    var target = p.offsetTop + p.offsetHeight - scrollEl.clientHeight * 0.7;
+    scrollEl.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+    timer = setTimeout(step, 1000 + p.textContent.length * 24);
+  }
+
+  function startLetter() {
+    setStage("letter");
+    setVolume(0.7, 1.5);
+    scrollEl.scrollTop = 0;
+    nextIdx = 0; revealed = 0; letterIdx = 0;
+    updateThumb();
+    if (REDUCED) {
+      paras.forEach(function (p) { p.classList.add("show"); });
+      nextIdx = revealed = letterIdx = paras.length;
+      setPause(true, true);
+      setTimeout(showAsk, 9000);
+      return;
+    }
+    setPause(false, true);
+    timer = setTimeout(step, 700);
+  }
+
+  /* ================= question ================= */
+  var yesBtn = $("yes"), noBtn = $("no"), askEl = $("ask"), rowEl = $("row");
+  var NO_LABELS = ["No", "Nope", "Really?", "Hmm…", "Please?"];
+  var lastDodge = 0;
+
+  function showAsk() {
+    if (stage !== "letter") return;
+    setStage("ask");
+    askShownAt = performance.now();
+    notify("Reached the question: apology accepted?", PINK);
+  }
+
+  var dodging = false;
+  function relocate() {
+    var box = askEl.getBoundingClientRect(), br = noBtn.getBoundingClientRect();
+    if (!noBtn.classList.contains("free")) {
+      noBtn.style.transition = "none";
+      askEl.appendChild(noBtn);
+      noBtn.style.left = (br.left - box.left) + "px";
+      noBtn.style.top = (br.top - box.top) + "px";
+      noBtn.classList.add("free");
+      void noBtn.offsetWidth;
+      noBtn.style.transition = "";
+    }
+    var yr = yesBtn.getBoundingClientRect(), qr = askEl.querySelector(".q").getBoundingClientRect();
+    var bw = noBtn.offsetWidth, bh = noBtn.offsetHeight, m = 16;
+    var maxX = Math.max(m, box.width - bw - m), maxY = Math.max(70, box.height - bh - 96);
+    var curX = parseFloat(noBtn.style.left) || 0, curY = parseFloat(noBtn.style.top) || 0;
+    var x = m, y = 70, tries = 0, ok = false, pad = 14;
+    while (!ok && tries < 50) {
+      x = m + Math.random() * (maxX - m);
+      y = 70 + Math.random() * (maxY - 70);
+      var L = x + box.left, T = y + box.top, R = L + bw, B = T + bh;
+      var hitYes = !(R < yr.left - pad || L > yr.right + pad || B < yr.top - pad || T > yr.bottom + pad);
+      var hitQ = !(R < qr.left - pad || L > qr.right + pad || B < qr.top - pad || T > qr.bottom + pad);
+      var far = Math.hypot(x - curX, y - curY) > 90;
+      ok = !hitYes && !hitQ && (far || tries > 30);
+      tries++;
+    }
+    x = Math.min(maxX, Math.max(m, x));
+    y = Math.min(maxY, Math.max(70, y));
+    noBtn.style.left = x + "px";
+    noBtn.style.top = y + "px";
+    noBtn.textContent = NO_LABELS[Math.min(4, Math.floor(noCount / 2))];
+    noBtn.style.transform = "scale(" + Math.max(0.6, 1 - noCount * 0.04) + ")";
+    yesBtn.style.transform = "scale(" + Math.min(1.45, 1 + noCount * 0.06) + ")";
+  }
+
+  function dodge(ev) {
+    if (ev && ev.cancelable) ev.preventDefault();
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    if (stage !== "ask" || dodging) return;
+    var now = performance.now();
+    if (now - lastDodge < 700) return;
+    lastDodge = now;
+    dodging = true;
+    noCount++;
+    if (noCount === 1 || noCount % 3 === 0) {
+      notify("Tried to press NO (attempt " + noCount + ")", RED, [
+        { name: "No attempts so far", value: String(noCount), inline: true },
+        { name: "Time since question", value: fmt((now - askShownAt) / 1000), inline: true }
+      ]);
+    }
+    sfxShake();
+    noBtn.classList.remove("shake");
+    void noBtn.offsetWidth;
+    noBtn.classList.add("shake");
+    setTimeout(function () {
+      noBtn.classList.remove("shake");
+      relocate();
+      sfxRun();
+      dodging = false;
+    }, REDUCED ? 0 : 330);
+  }
+  ["pointerdown", "touchstart", "pointerenter", "click"].forEach(function (t) {
+    noBtn.addEventListener(t, dodge, { passive: false });
+  });
+
+  yesBtn.addEventListener("click", function (e) {
+    if (stage !== "ask") return;
+    e.stopPropagation();
+    var secs = (performance.now() - askShownAt) / 1000;
+    notify("She said YES! Apology accepted", GREEN, [
+      { name: "Answered in", value: fmt(secs), inline: true },
+      { name: "Tried to press No", value: noCount + (noCount === 1 ? " time" : " times"), inline: true }
+    ]);
+    var r = yesBtn.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2);
+    chimeUp();
+    setVolume(0.8, 1);
+    setStage("done");
+    setTimeout(function () { burst(innerWidth / 2, innerHeight * 0.45); }, 500);
+  });
+
+  /* ================= begin ================= */
+  var beganAt = 0;
+  $("open").addEventListener("click", function () {
+    if (stage !== "intro") return;
+    startAudio();
+    try { if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(function () {}); } catch (err) {}
+    notify("Tapped Open", PINK);
+    beganAt = performance.now();
+    setStage("heart");
+    resize();
+    S.start = performance.now();
+    requestAnimationFrame(heartFrame);
+  });
+  $("tapBtn").addEventListener("click", tapHeart);
+
+  var rzTimer = null, lastW = 0;
+  window.addEventListener("resize", function () {
+    clearTimeout(rzTimer);
+    rzTimer = setTimeout(function () {
+      var w = Math.floor(heartSec.clientWidth);
+      if (w < 50 || Math.abs(w - lastW) < 4) return;
+      lastW = w;
+      if (stage === "heart") { resize(); S.start = performance.now(); }
+    }, 150);
+  });
+
+  /* ================= background: drifting hearts, rotating rings, bursts ================= */
+  var bg = $("bg"), bctx = bg.getContext("2d"), BW = 0, BH = 0, BD = 1;
+  var parts = [], bursts = [];
+  var ring = { x: 0, y: 0, w: 300, a: 0 };
+  var tNow = 0, lastT = 0;
+
+  function bgResize() {
+    BD = Math.min(window.devicePixelRatio || 1, 2);
+    BW = window.innerWidth; BH = window.innerHeight;
+    bg.width = Math.round(BW * BD); bg.height = Math.round(BH * BD);
+    if (!ring.x) { ring.x = BW / 2; ring.y = BH * 0.42; }
+  }
+  function heartPath(c, x, y, s) {
+    c.beginPath();
+    c.moveTo(x, y + s * 0.4);
+    c.bezierCurveTo(x + s * 1.1, y - s * 0.1, x + s * 0.6, y - s * 0.95, x, y - s * 0.35);
+    c.bezierCurveTo(x - s * 0.6, y - s * 0.95, x - s * 1.1, y - s * 0.1, x, y + s * 0.4);
+    c.closePath();
+  }
+  function initParts() {
+    parts = [];
+    var n = 34;
+    for (var i = 0; i < n; i++) {
+      parts.push({
+        x: Math.random() * BW, y: Math.random() * BH,
+        s: 3 + Math.random() * 8, v: 5 + Math.random() * 14,
+        ph: Math.random() * 6.28, sw: 4 + Math.random() * 10,
+        a: 0.08 + Math.random() * 0.22, heart: Math.random() < 0.6,
+        hue: Math.random() < 0.7 ? [230, 13, 36] : [255, 154, 166]
+      });
+    }
+  }
+  function burst(x, y) {
+    for (var i = 0; i < 46; i++) {
+      var ang = Math.random() * 6.283, sp = 120 + Math.random() * 380;
+      bursts.push({ x: x, y: y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 160, s: 5 + Math.random() * 9, life: 0, max: 1.8 + Math.random() * 1.4, hue: Math.random() < 0.6 ? [230, 13, 36] : [255, 154, 166] });
+    }
+  }
+  function ringTarget() {
+    var el, r;
+    if (stage === "intro") {
+      el = $("intro"); r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: Math.min(BW, 480) * 0.78, a: 0.55 };
+    }
+    if (stage === "heart" || stage === "fall") {
+      r = heartSec.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + S.cy, w: S.Wl, a: stage === "heart" ? 0.95 : 0.35 };
+    }
+    if (stage === "ask") {
+      r = $("askcard").getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: Math.min(BW, 480) * 0.7, a: 0.6 };
+    }
+    if (stage === "done") {
+      r = $("done").getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: Math.min(BW, 480) * 0.8, a: 0.8 };
+    }
+    return { x: ring.x, y: ring.y, w: ring.w, a: 0 };
+  }
+  function drawRing(cx, cy, R, rot, dash, width, color) {
+    bctx.save();
+    bctx.translate(cx, cy); bctx.rotate(rot);
+    bctx.setLineDash(dash); bctx.lineWidth = width; bctx.strokeStyle = color;
+    bctx.beginPath(); bctx.arc(0, 0, R, 0, Math.PI * 2); bctx.stroke();
+    bctx.restore();
+  }
+  function bgFrame(now) {
+    requestAnimationFrame(bgFrame);
+    if (document.hidden) return;
+    var dt = Math.min((now - lastT) / 1000, 0.05); lastT = now;
+    if (!REDUCED) tNow += dt;
+    bctx.setTransform(BD, 0, 0, BD, 0, 0);
+    bctx.clearRect(0, 0, BW, BH);
+
+    var i, p;
+    for (i = 0; i < parts.length; i++) {
+      p = parts[i];
+      if (!REDUCED) { p.y -= p.v * dt; p.ph += dt * 0.8; }
+      if (p.y < -20) { p.y = BH + 20; p.x = Math.random() * BW; }
+      var px = p.x + Math.sin(p.ph) * p.sw;
+      bctx.fillStyle = "rgba(" + p.hue[0] + "," + p.hue[1] + "," + p.hue[2] + "," + p.a + ")";
+      if (p.heart) { heartPath(bctx, px, p.y, p.s); bctx.fill(); }
+      else { bctx.beginPath(); bctx.arc(px, p.y, p.s * 0.35, 0, 6.283); bctx.fill(); }
+    }
+
+    var tg = ringTarget(), k = Math.min(1, dt * 3);
+    ring.x += (tg.x - ring.x) * k; ring.y += (tg.y - ring.y) * k; ring.w += (tg.w - ring.w) * k;
+    ring.a += (tg.a - ring.a) * Math.min(1, dt * 2.5);
+    if (ring.a > 0.01) {
+      var W = ring.w, A = ring.a;
+      drawRing(ring.x, ring.y, W * 0.52, tNow * 0.18, [2, 11], 2, "rgba(255,154,166," + (0.55 * A) + ")");
+      drawRing(ring.x, ring.y, W * 0.6, -tNow * 0.12, [70, 34, 8, 34], 1.4, "rgba(230,13,36," + (0.6 * A) + ")");
+      drawRing(ring.x, ring.y, W * 0.69, tNow * 0.07, [1, 7], 2.4, "rgba(255,200,205," + (0.4 * A) + ")");
+      for (i = 0; i < 3; i++) {
+        var ang = tNow * 0.5 + i * 2.0944, R = W * 0.6;
+        var sx = ring.x + Math.cos(ang) * R, sy = ring.y + Math.sin(ang) * R;
+        bctx.save();
+        bctx.lineCap = "round"; bctx.lineWidth = 2.2;
+        bctx.strokeStyle = "rgba(255,170,180," + (0.5 * A) + ")";
+        bctx.beginPath(); bctx.arc(ring.x, ring.y, R, ang - 0.45, ang); bctx.stroke();
+        bctx.fillStyle = "rgba(255,225,228," + (0.95 * A) + ")";
+        bctx.beginPath(); bctx.arc(sx, sy, 3.2, 0, 6.283); bctx.fill();
+        bctx.restore();
+      }
+    }
+
+    for (i = bursts.length - 1; i >= 0; i--) {
+      p = bursts[i];
+      p.life += dt; p.vy += 520 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.life > p.max) { bursts.splice(i, 1); continue; }
+      bctx.fillStyle = "rgba(" + p.hue[0] + "," + p.hue[1] + "," + p.hue[2] + "," + (1 - p.life / p.max) + ")";
+      heartPath(bctx, p.x, p.y, p.s); bctx.fill();
+    }
+  }
+  window.addEventListener("resize", function () { bgResize(); });
+  bgResize(); initParts();
+  requestAnimationFrame(bgFrame);
+
+  var visits = 1;
+  try { visits = (parseInt(localStorage.getItem("rin_visits") || "0", 10) || 0) + 1; localStorage.setItem("rin_visits", String(visits)); } catch (err) {}
+  updateGuide();
+  notify("Rin just opened the link", PINK, [{ name: "Visit number", value: String(visits), inline: true }]);
+  liveStart();
+})();
+</script>
+</body>
+</html>
